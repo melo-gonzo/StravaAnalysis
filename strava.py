@@ -29,7 +29,6 @@ class Strava:
         return os.path.isfile("data.csv")
 
     def get_access_token(self):
-        import pdb; pdb.set_trace()
         code = self.strava_code
         try:
             access_token = self.client.exchange_code_for_token(
