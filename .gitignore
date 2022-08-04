@@ -2,5 +2,5 @@
 *.csv*
 *access_token*
 *figs*
-SETUP_STEPS
+*SETUP_STEPS*
 .DS_Store

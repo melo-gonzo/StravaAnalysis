@@ -293,6 +293,8 @@ try:
     data.get_splits()
 except Exception as e:
     print(traceback.format_exc())
+    print(6 * "\n")
+    print("continuing")
 
 
 ##################################################
