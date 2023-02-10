@@ -13,7 +13,7 @@ from stravalib.model import Split
 
 from strava_payload import *
 
-USER = "hannah"
+USER = "carmelo"
 payload, strava_code = get_payload(USER)
 
 
@@ -60,7 +60,7 @@ class Strava:
                 refresh_token=access_token["refresh_token"],
             )
             access_token = refresh_response
-            with open("../access_token.pickle", "wb") as f:
+            with open(f"../{USER}_access_token.pickle", "wb") as f:
                 pickle.dump(refresh_response, f)
             print("Refreshed token saved to file")
             self.client.access_token = refresh_response["access_token"]
@@ -291,11 +291,11 @@ class Strava:
                 splits_df.to_csv(f"{USER}_splits.csv")
 
 
-def date_distance(runs):
+def fill_blanks(runs):
     rd = {}
     for idx in range(len(runs)):
         date = runs.iloc[idx]["start_date_local"].split(" ")[0]
-        distance = runs.iloc[idx]["distance"] / 1000
+        distance = runs.iloc[idx]["total_elevation_gain"] 
         if date in rd.keys():
             rd[date] += distance
         else:
@@ -303,7 +303,7 @@ def date_distance(runs):
 
     new_runs = pd.Series(rd)
 
-    idx = pd.date_range("2018-03-15", "2022-09-03")
+    idx = pd.date_range("2017-05-20", "2023-02-01")
     # s = pd.Series({
     #     '09-02-2020': 2,
     #     '09-03-2020': 1,
@@ -312,16 +312,33 @@ def date_distance(runs):
     # })
     new_runs.index = pd.DatetimeIndex(new_runs.index)
     new_runs = new_runs.reindex(idx, fill_value=0)
-    new_runs.to_csv("date_distance.csv")
+    new_runs.to_csv("elevation_distacne.csv")
 
 
 ######
 ###### Standard Workflow
 ######
-# data = Strava(payload, strava_code)
-# data.get_access_token()
-# data.download_data()
-# data.organize_data()
+data = Strava(payload, strava_code)
+data.get_access_token()
+data.download_data()
+data.organize_data()
+
+######
+###### Fill blank days
+######
+runs = data.get_activity_type("Run")
+runs["pace"] = runs["moving_time"] / (runs["distance_mile"]) / 60
+fill_blanks(runs)
+# for idx in range(len(runs)):
+#     runs["start_date_local"].iloc[idx] = runs.iloc[idx]["start_date_local"].split(" ")[0]
+
+# import pdb; pdb.set_trace()
+# idx = pd.date_range("2017-05-20", "2023-02-01")
+# df = pd.DataFrame({"start_date_local":idx})
+# df = df.set_index('start_date_local')
+# runs = runs.merge(df, how='left', left_index=True, right_on='start_date_local')
+# # runs = runs.reindex(idx, fill_value=0)
+# runs.to_csv("NEW_date_distance.csv")
 ######
 ###### Download Splits Data
 ######
@@ -340,21 +357,21 @@ def date_distance(runs):
 ######
 ###### Make Histogram From Splits Data
 ######
-data = Strava(payload, strava_code)
-data.data = pd.read_csv(f"{USER}_splits.csv")
-runs = data.data.copy()
-runs = runs.iloc[1:]
-runs["pace"] = runs["s_moving_time"] / (runs["s_distance"] * 0.0006214) / 60
-data.year_histogram(
-    runs,
-    min=4,
-    max=12,
-    bins_per_div=6,
-    activity_type="Split",
-    metric="pace",
-    weight_unit="None",
-    use_weights=False,
-)
+# data = Strava(payload, strava_code)
+# data.data = pd.read_csv(f"{USER}_splits.csv")
+# runs = data.data.copy()
+# runs = runs.iloc[1:]
+# runs["pace"] = runs["s_moving_time"] / (runs["s_distance"] * 0.0006214) / 60
+# data.year_histogram(
+#     runs,
+#     min=4,
+#     max=12,
+#     bins_per_div=6,
+#     activity_type="Split",
+#     metric="pace",
+#     weight_unit="None",
+#     use_weights=False,
+# )
 ######
 ###### Make Plots From Standard Run Data
 ######
@@ -371,7 +388,7 @@ data.year_histogram(
 ###### Make Histogram of Hour Run Started
 ######
 # plt.close()
-# df = pd.read_csv('data.csv')
+# df = pd.read_csv(f'{USER}_data.csv')
 # hour = df['time_of_day']
 # hour = [int(_.split(':')[0]) for _ in hour]
 # plt.hist(hour, range(0,25), edgecolor="w",color='k')
@@ -385,7 +402,8 @@ data.year_histogram(
 # runs = runs.iloc[1:]
 # runs["pace"] = runs["s_moving_time"] / (runs["s_distance"] * 0.0006214) / 60
 # r = list(zip([[2019]*12+[2020]*12+[2021]*12+[2022]*12][0],[list(range(1,13))*4][0]))
-# r_ = r[6:-3]
+# # r_ = r[6:-3]
+# r_ = r[31:-3]
 # min = 4
 # max = 12
 # bins_per_div = 6
@@ -394,15 +412,15 @@ data.year_histogram(
 # weight_unit = "None"
 # use_weights = False
 # alpha = np.linspace(0.5, 1, 4)[::-1]
-# # colors = ["g", "r", "b", "k"]
-# colors = ['k', 'k','k', 'k']
+# colors = ["g", "r", "b", "k"]
+# # colors = ['k', 'k','k', 'k']
 # runs[metric] = runs[metric][runs[metric] >= min]
 # runs[metric] = runs[metric][runs[metric] >= min]
 # runs_og = runs.copy()
 # bins = np.linspace(min, max, (max - min) * bins_per_div + 1)
-# for r in range(3, len(r_)):
+# for r in range(1, len(r_)):
 #     # import pdb; pdb.set_trace()
-#     for idx, loc in enumerate(range(r - 3, r + 1)):
+#     for idx, loc in enumerate(range(r - 1, r + 1)):
 #         try:
 #             print(r_[loc])
 #             # import pdb; pdb.set_trace()
